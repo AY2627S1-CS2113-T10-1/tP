@@ -16,6 +16,9 @@ public final class ParseException extends Exception {
         this.usage = Objects.requireNonNull(usage, "usage");
     }
 
+    /**
+     * Returns the recognized command format or the help hint for an unknown command.
+     */
     public String usage() {
         return usage;
     }

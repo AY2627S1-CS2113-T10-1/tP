@@ -18,8 +18,8 @@ class CommitmentTest {
     void overlaps_intersectionAndContainment_isSymmetric() {
         Commitment lecture = monday(1, 10, 0, 120);
         for (Commitment other : new Commitment[] {
-            monday(2, 11, 30, 60), monday(3, 10, 30, 30),
-            monday(4, 9, 0, 240), monday(5, 10, 0, 120)
+                monday(2, 11, 30, 60), monday(3, 10, 30, 30),
+                monday(4, 9, 0, 240), monday(5, 10, 0, 120)
         }) {
             assertTrue(lecture.overlaps(other));
             assertTrue(other.overlaps(lecture));

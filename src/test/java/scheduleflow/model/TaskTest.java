@@ -30,7 +30,7 @@ class TaskTest {
         assertThrows(ValidationException.class, () -> new Task(1, null, DEADLINE, 30));
         assertThrows(ValidationException.class, () -> new Task(1, "A", DEADLINE, 45));
         for (LocalDateTime deadline : new LocalDateTime[] {null, DEADLINE.withSecond(1),
-            DEADLINE.withNano(1), DEADLINE.withYear(0), DEADLINE.withYear(10000)}) {
+                DEADLINE.withNano(1), DEADLINE.withYear(0), DEADLINE.withYear(10000)}) {
             assertThrows(ValidationException.class, () -> new Task(1, "A", deadline, 30));
         }
     }

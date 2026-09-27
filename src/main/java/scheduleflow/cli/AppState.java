@@ -19,10 +19,16 @@ public final class AppState {
         snapshot = Objects.requireNonNull(initial, "initial");
     }
 
+    /**
+     * Returns the last successfully loaded or saved snapshot.
+     */
     public Snapshot snapshot() {
         return snapshot;
     }
 
+    /**
+     * Returns the current temporary plan, if one has been generated since the last mutation.
+     */
     public Optional<Plan> currentPlan() {
         return currentPlan;
     }
