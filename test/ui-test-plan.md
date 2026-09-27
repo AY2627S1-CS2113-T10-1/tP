@@ -67,3 +67,8 @@ contract to make these fixtures work. Add a test-only launcher and explicit
 fixtures if fixed-clock process tests are later needed. A14/A22 require fake
 storage or deterministic failure injection. Their release checks remain
 unexecuted until the responsible modules are implemented.
+
+Foundation checkpoint: all required types now compile; 32 feature methods
+remain ownership-marked stubs. Review found no justified change to the four
+planned scenarios or their expectations. The foundation UI session remains
+BLOCKED; it does not establish any CLI acceptance behavior.
