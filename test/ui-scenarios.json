@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "UI-001", "aim": "First launch has empty lists and no plan",
+      "status": "planned", "setup": "No data file; Printing and Save implemented",
+      "sessions": [{ "startup": "", "steps": [
+        { "input": "task list", "output": "No tasks found." },
+        { "input": "commitment list", "output": "No commitments found." },
+        { "input": "schedule today", "output": "No current plan. Run plan to generate one." },
+        { "input": "exit", "output": "Goodbye for now!", "exitCode": 0 }
+      ] }]
+    },
+    {
+      "id": "UI-002", "aim": "Midnight, adjacency and counters survive deletion and restart",
+      "status": "planned", "setup": "No data file; Commitment, Save and Printing implemented",
+      "sessions": [
+        { "startup": "", "steps": [
+          { "input": "commitment add n/Late day/MON start/2330 d/30", "output": "Added C1: Late | Monday 23:30 - 24:00 (30 min)" },
+          { "input": "commitment add n/Earlier day/MON start/2300 d/30", "output": "Added C2: Earlier | Monday 23:00 - 23:30 (30 min)" },
+          { "input": "commitment delete C1", "output": "Deleted commitment C1: Late" },
+          { "input": "commitment delete C2", "output": "Deleted commitment C2: Earlier" },
+          { "input": "exit", "output": "Goodbye for now!", "exitCode": 0 }
+        ] },
+        { "startup": "", "steps": [
+          { "input": "commitment list", "output": "No commitments found." },
+          { "input": "commitment add n/Restart day/TUE start/1000 d/30", "output": "Added C3: Restart | Tuesday 10:00 - 10:30 (30 min)" },
+          { "input": "schedule today", "output": "No current plan. Run plan to generate one." },
+          { "input": "exit", "output": "Goodbye for now!", "exitCode": 0 }
+        ] }
+      ]
+    },
+    {
+      "id": "UI-003", "aim": "EOF terminates normally",
+      "status": "planned", "setup": "No data file; Save and Printing implemented",
+      "sessions": [{ "startup": "", "steps": [
+        { "input": null, "output": "Goodbye for now!", "exitCode": 0 }
+      ] }]
+    },
+    {
+      "id": "UI-004", "aim": "Corrupt store terminates before prompting",
+      "status": "planned", "setup": "Unsupported version; Save and Printing implemented and error wording agreed",
+      "files": { "data/scheduleflow.txt": "SCHEDULEFLOW|99\nNEXT|1|1\n" },
+      "sessions": [{ "startup": "Error: Unsupported file version: 99\n", "steps": [], "exitCode": 1 }]
+    }
+  ]
+}
