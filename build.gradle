@@ -6,6 +6,9 @@ plugins {
 }
 
 java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
     sourceCompatibility = JavaVersion.VERSION_25
     targetCompatibility = JavaVersion.VERSION_25
 }
@@ -38,7 +41,7 @@ test {
 }
 
 application {
-    mainClass = 'seedu.duke.Duke'
+    mainClass = 'scheduleflow.Main'
 }
 
 jar {
@@ -49,13 +52,22 @@ jar {
 }
 
 shadowJar {
-    archiveFileName = 'duke.jar'
+    archiveFileName = 'scheduleflow.jar'
+    manifest {
+        attributes 'Main-Class': 'scheduleflow.Main'
+    }
 }
 
 checkstyle {
     toolVersion = '14.1.0'
+    maxWarnings = 0
 }
 
 run {
     standardInput = System.in
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = 25
 }
