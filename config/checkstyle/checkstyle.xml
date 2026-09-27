@@ -5,7 +5,7 @@
 
 <!--
     This configuration file enforces rules for the coding standard at
-    https://se-education.org/guides/conventions/java/basic.html
+    https://se-education.org/guides/conventions/java/intermediate.html
 -->
 
 <module name="Checker">
@@ -238,11 +238,21 @@
         <module name="CommentsIndentation"/>
 
         <module name="Indentation">
-            <property name="caseIndent" value="0" />
+            <property name="caseIndent" value="4" />
             <property name="throwsIndent" value="8" />
+            <property name="lineWrappingIndentation" value="8" />
         </module>
 
         <module name="NoWhitespaceBeforeCaseDefaultColon"/>
+        <module name="WhitespaceAround"/>
+        <module name="WhitespaceAfter"/>
+        <module name="MethodParamPad"/>
+        <module name="NoWhitespaceBefore"/>
+        <module name="MissingJavadocType"/>
+        <module name="MissingJavadocMethod">
+            <property name="tokens" value="METHOD_DEF"/>
+            <property name="allowedAnnotations" value="Override, Test, BeforeAll, BeforeEach, AfterAll, AfterEach"/>
+        </module>
 
         <!--
         JAVADOC CHECKS
