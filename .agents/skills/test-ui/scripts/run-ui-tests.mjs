@@ -107,6 +107,13 @@ export function validateFixtures(fixtures) {
             throw new Error(`Invalid case: ${scenario.id}`);
         }
         ids.add(scenario.id);
+        if (scenario.requiredComponents !== undefined
+                && (!Array.isArray(scenario.requiredComponents)
+                    || !scenario.requiredComponents.length
+                    || scenario.requiredComponents.some(value => typeof value !== 'string'
+                        || !/^[A-Za-z]+\.[A-Za-z]+$/.test(value)))) {
+            throw new Error(`Invalid required components: ${scenario.id}`);
+        }
         for (const session of scenario.sessions) {
             if (typeof session.startup !== 'string' || !Array.isArray(session.steps)) {
                 throw new Error(`Invalid session: ${scenario.id}`);
@@ -125,6 +132,7 @@ export function validateFixtures(fixtures) {
                 if ((step.input !== null && (typeof step.input !== 'string' || /[\r\n]/.test(step.input)))
                         || typeof step.output !== 'string'
                         || (step.newline !== undefined && typeof step.newline !== 'boolean')
+                        || (step.newline === false && step.output !== '')
                         || (index < steps.length - 1 && (step.exitCode !== undefined || step.input === null))) {
                     throw new Error(`Invalid command ${index + 1}: ${scenario.id}`);
                 }
@@ -229,6 +237,57 @@ async function loadFixtures(args) {
         options['--fixtures'] ?? 'test/ui-scenarios.json'), 'utf8'));
 }
 
+/** Selects readiness per scenario so unrelated stubs never mask an active regression. */
+export function selectCases(cases, missing) {
+    const result = { runnable: [], blocked: [], planned: [] };
+    for (const scenario of cases) {
+        const dependencies = scenario.requiredComponents;
+        const blockers = missing.filter(marker => !dependencies
+            || dependencies.includes(marker.split('implement ').at(-1)));
+        if (blockers.length) result.blocked.push({ scenario, blockers });
+        else if (scenario.status === 'active') result.runnable.push(scenario);
+        else result.planned.push(scenario);
+    }
+    return result;
+}
+
+/** Stops the whole session at the first scenario failure. */
+export async function runCases(cases, command, args, record) {
+    for (const scenario of cases) await runScenario(scenario, command, args, record);
+}
+
+async function probeBlockedApplication(java, record) {
+    const directory = await mkdtemp(path.join(tmpdir(), 'scheduleflow-probe-'));
+    record(`SCAFFOLD STARTUP PROBE (diagnostic only; no feature case)\nDIRECTORY ${directory}`);
+    record(`COMMAND ${java} -jar ${path.join(ROOT, 'build/libs/scheduleflow.jar')}`);
+    const child = new ConsoleProcess(java, ['-jar', path.join(ROOT, 'build/libs/scheduleflow.jar')], directory, record);
+    try {
+        child.send(null);
+        await child.waitUntil(() => child.closed);
+    } finally {
+        await child.stop();
+        await rm(directory, { recursive: true, force: true });
+    }
+}
+
+async function executeFixtures(fixtures, missing, java, record) {
+    const selection = selectCases(fixtures.cases, missing);
+    if (missing.length) record(`UNFINISHED COMPONENTS\n${missing.join('\n')}`);
+    for (const { scenario, blockers } of selection.blocked) {
+        record(`BLOCKED ${scenario.id} (${scenario.status}); UNEXECUTED\n${blockers.join('\n')}`);
+    }
+    for (const scenario of selection.planned) {
+        record(`PLANNED ${scenario.id}; UNEXECUTED: review readiness and activate in fixtures`);
+    }
+    if (missing.includes('TODO(Printing): implement Main.main')) {
+        await probeBlockedApplication(java, record);
+    }
+    await runCases(selection.runnable, java, ['-jar', path.join(ROOT, 'build/libs/scheduleflow.jar')], record);
+    record(`RESULT passed=${selection.runnable.length} failed=0 blocked=${selection.blocked.length}`
+        + ` planned=${selection.planned.length}`);
+    if (!selection.runnable.length) record('BLOCKED: no executable active scenarios');
+    return selection.blocked.length || !selection.runnable.length ? 2 : 0;
+}
 async function main() {
     const transcript = [];
     const record = text => { transcript.push(text); console.log(text); };
@@ -255,25 +314,9 @@ async function main() {
             await readFile(path.join(ROOT, 'src/main/java/scheduleflow/Main.java'));
         } catch (error) {
             if (error.code !== 'ENOENT') throw error;
-            missing = ['Printing: scheduleflow.Main and ScheduleFlow components not created', ...missing];
+            missing = ['TODO(Printing): implement Main.main', ...missing];
         }
-        if (missing.length) {
-            record(`BLOCKED: unfinished application components\n${missing.join('\n')}`);
-            for (const scenario of fixtures.cases) record(`UNEXECUTED ${scenario.id} (${scenario.status})`);
-            record('RESULT passed=0 failed=0; all listed cases blocked by scaffold preflight');
-            exitCode = 2;
-        } else {
-            const active = fixtures.cases.filter(scenario => scenario.status === 'active');
-            for (const scenario of fixtures.cases.filter(scenario => scenario.status === 'planned')) {
-                record(`PLANNED ${scenario.id}: ${scenario.setup}`);
-            }
-            for (const scenario of active) {
-                await runScenario(scenario, java, ['-jar', path.join(ROOT, 'build/libs/scheduleflow.jar')], record);
-            }
-            record(`RESULT passed=${active.length} failed=0 planned=${fixtures.cases.length - active.length}`);
-            exitCode = active.length ? 0 : 2;
-            if (!active.length) record('BLOCKED: no active scenarios; review plan readiness');
-        }
+        exitCode = await executeFixtures(fixtures, missing, java, record);
     } catch (error) {
         record(error.stack);
         record('FAILED: session stopped immediately; no later scenarios executed');

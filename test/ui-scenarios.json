@@ -2,6 +2,7 @@
   "version": 1,
   "cases": [
     {
+      "requiredComponents": ["Main.main","App.run","ConsoleUi.prompt","ConsoleUi.readLine","ConsoleUi.write","FileStorage.load","StateCodec.decode","CommandParser.parse","CommandDispatcher.execute","TaskService.list","CommitmentService.list","TextRenderer.tasks","TextRenderer.commitments","TextRenderer.noPlan","TextRenderer.exit"],
       "id": "UI-001", "aim": "First launch has empty lists and no plan",
       "status": "planned", "setup": "No data file; Printing and Save implemented",
       "sessions": [{ "startup": "", "steps": [
@@ -12,6 +13,7 @@
       ] }]
     },
     {
+      "requiredComponents": ["Main.main","App.run","ConsoleUi.prompt","ConsoleUi.readLine","ConsoleUi.write","FileStorage.load","FileStorage.save","StateCodec.decode","StateCodec.encode","CommandParser.parse","CommandDispatcher.execute","CommitmentService.add","CommitmentService.delete","CommitmentService.list","TextRenderer.commitmentAdded","TextRenderer.commitmentDeleted","TextRenderer.commitments","TextRenderer.noPlan","TextRenderer.exit"],
       "id": "UI-002", "aim": "Midnight, adjacency and counters survive deletion and restart",
       "status": "planned", "setup": "No data file; Commitment, Save and Printing implemented",
       "sessions": [
@@ -31,6 +33,7 @@
       ]
     },
     {
+      "requiredComponents": ["Main.main","App.run","ConsoleUi.prompt","ConsoleUi.readLine","ConsoleUi.write","FileStorage.load","StateCodec.decode","TextRenderer.exit"],
       "id": "UI-003", "aim": "EOF terminates normally",
       "status": "planned", "setup": "No data file; Save and Printing implemented",
       "sessions": [{ "startup": "", "steps": [
@@ -38,6 +41,7 @@
       ] }]
     },
     {
+      "requiredComponents": ["Main.main","App.run","FileStorage.load","StateCodec.decode","ConsoleUi.write","TextRenderer.error"],
       "id": "UI-004", "aim": "Corrupt store terminates before prompting",
       "status": "planned", "setup": "Unsupported version; Save and Printing implemented and error wording agreed",
       "files": { "data/scheduleflow.txt": "SCHEDULEFLOW|99\nNEXT|1|1\n" },

@@ -36,3 +36,7 @@ within a case share saved data for restart checks. No dynamic output
 placeholders are supported. See the plan for framing, timeout and comparison
 rules. Transcripts include build output, actual input, stdout, stderr and exit
 status under ignored `build/ui-transcripts/`.
+
+Preflight blocks only scenarios whose required components are unfinished;
+run ready active cases even when another owner still has stubs. A scaffold
+startup probe records the real JAR failure as diagnostic evidence, never a pass.

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
-import { ConsoleProcess, runScenario, validateFixtures } from '../.agents/skills/test-ui/scripts/run-ui-tests.mjs';
+import { ConsoleProcess, runCases, runScenario, selectCases, validateFixtures } from '../.agents/skills/test-ui/scripts/run-ui-tests.mjs';
 
 const echoProgram = `
 const readline = require('node:readline');
@@ -124,4 +124,23 @@ test('stderr and unexpected exit fail the current command', async () => {
         await assert.rejects(runScenario(scenario([{ input: 'exit', output: 'Bye', exitCode: 0 }]),
             process.execPath, ['-e', program], () => {}), /FAILED RUNNER-TEST session 1 command 1/);
     }
+});
+
+test('unrelated optimizer stubs do not block an active list scenario', () => {
+    const fixture = scenario([{ input: 'exit', output: 'Bye', exitCode: 0 }]);
+    fixture.requiredComponents = ['Main.main', 'TaskService.list'];
+    const unrelated = 'TODO(Optimizer): implement EarliestDeadlinePlanner.generate';
+    assert.equal(selectCases([fixture], [unrelated]).runnable.length, 1);
+    assert.equal(selectCases([fixture], ['TODO(Task): implement TaskService.list']).blocked.length, 1);
+    fixture.status = 'planned';
+    assert.equal(selectCases([fixture], []).planned.length, 1);
+});
+
+test('a failed case prevents launching later independent cases', async () => {
+    const first = scenario([{ input: 'exit', output: 'Wrong', exitCode: 0 }]);
+    const later = { ...scenario([{ input: 'exit', output: 'Bye', exitCode: 0 }]), id: 'LATER' };
+    const transcript = [];
+    await assert.rejects(runCases([first, later], process.execPath, ['-e', echoProgram],
+        line => transcript.push(line)), /FAILED RUNNER-TEST/);
+    assert.ok(!transcript.some(line => line.startsWith('CASE LATER')));
 });

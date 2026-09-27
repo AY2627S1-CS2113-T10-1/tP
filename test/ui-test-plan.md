@@ -73,3 +73,14 @@ Foundation checkpoint: all required types now compile; 32 feature methods
 remain ownership-marked stubs. Review found no justified change to the four
 planned scenarios or their expectations. The foundation UI session remains
 BLOCKED; it does not establish any CLI acceptance behavior.
+
+Each fixture's `requiredComponents` lists the Type.method implementations
+needed for that scenario. Preflight reports all unfinished methods, blocks
+only dependent cases, and still runs ready active cases. Ad-hoc lists without
+a dependency list conservatively require the full CLI. A ready planned case
+must be reviewed and activated by its owner; planned is never a pass.
+
+When Main.main is still an explicit stub, the runner also launches the real
+packaged JAR in a separate empty temporary directory, closes stdin, and records
+its actual startup output and exit. This is a diagnostic scaffold probe, never
+a feature pass. Once Main exists, active scenarios run the real packaged JAR.
