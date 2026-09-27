@@ -29,8 +29,9 @@ Transcripts are generated in ignored `build/ui-transcripts/`.
 - Each `steps` entry sends its `input` plus LF, waits for `output` plus LF and
   the exact next prompt, and compares before sending any subsequent input.
   `input: null` closes stdin. An `exitCode` expects termination instead of a
-  prompt; it must appear only on the last step. Empty lines need explicit
-  prompt-only support if added later, since they produce no response newline.
+  prompt; it must appear only on the last step. Set `newline: false` for a
+  prompt-only response to an ignored blank line; `output` must then be empty.
+  CRLF split across pipe chunks is buffered until comparison is possible.
 - Stderr must be empty during feature scenarios. Unexpected output, stderr,
   exit or timeout fails the case. The transcript includes the failing position,
   expected/actual output, captured stderr and process exit.

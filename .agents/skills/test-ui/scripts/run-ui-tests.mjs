@@ -49,10 +49,13 @@ export class ConsoleProcess {
         const target = exitCode === null ? expected + PROMPT : expected;
         try {
             await this.waitUntil(() => {
-                const actual = normalize(this.stdout.slice(this.offset));
+                const raw = this.stdout.slice(this.offset);
+                // Pipes may split CRLF across chunks. Defer that trailing CR until its next byte.
+                const hasPendingCr = !this.closed && raw.endsWith('\r');
+                const actual = normalize(hasPendingCr ? raw.slice(0, -1) : raw);
                 return this.closed || this.stderr.length > 0
                     || !target.startsWith(actual)
-                    || (exitCode === null && actual === target);
+                    || (exitCode === null && actual === target && !hasPendingCr);
             });
         } catch (error) {
             throw this.mismatch(target, error.message);
@@ -85,6 +88,7 @@ export class ConsoleProcess {
                 new Promise(resolve => setTimeout(resolve, 1000))]);
             if (!this.closed) this.child.kill('SIGKILL');
         }
+        this.record(`COMPLETE STDOUT ${JSON.stringify(this.stdout)}`);
         this.record(`STDERR ${JSON.stringify(this.stderr)}`);
         this.record(`EXIT ${this.code} SIGNAL ${this.signal ?? 'none'}`);
     }
@@ -120,6 +124,7 @@ export function validateFixtures(fixtures) {
             for (const [index, step] of steps.entries()) {
                 if ((step.input !== null && (typeof step.input !== 'string' || /[\r\n]/.test(step.input)))
                         || typeof step.output !== 'string'
+                        || (step.newline !== undefined && typeof step.newline !== 'boolean')
                         || (index < steps.length - 1 && (step.exitCode !== undefined || step.input === null))) {
                     throw new Error(`Invalid command ${index + 1}: ${scenario.id}`);
                 }
@@ -185,7 +190,7 @@ export async function runScenario(scenario, command, args, record) {
                 for (const [index, step] of session.steps.entries()) {
                     position = `session ${sessionIndex + 1} command ${index + 1} ${JSON.stringify(step.input)}`;
                     child.send(step.input);
-                    await child.frame(step.output + '\n', step.exitCode ?? null);
+                    await child.frame(step.output + (step.newline === false ? '' : '\n'), step.exitCode ?? null);
                 }
             } finally {
                 await child.stop();

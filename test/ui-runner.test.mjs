@@ -26,7 +26,7 @@ test('maintained fixture schema and local skill frontmatter are valid', async ()
     validateFixtures(JSON.parse(await readFile(new URL('ui-scenarios.json', import.meta.url), 'utf8')));
     for (const name of ['test-ui', 'seedu-java-coding-standard', 'seedu-git-standard']) {
         const skill = await readFile(new URL(`../.agents/skills/${name}/SKILL.md`, import.meta.url), 'utf8');
-        assert.match(skill, new RegExp(`^---\nname: ${name}\ndescription: [^\n]+\n---\n`));
+        assert.match(skill.replaceAll('\r\n', '\n'), new RegExp(`^---\nname: ${name}\ndescription: [^\n]+\n---\n`));
         assert.doesNotMatch(skill, /^\[TODO:/m);
     }
 });
@@ -88,4 +88,40 @@ test('setup cannot escape the isolated directory', async () => {
     fixture.files = { '../escape.txt': 'bad' };
     await assert.rejects(runScenario(fixture, process.execPath, ['-e', echoProgram], () => {}),
         /Setup path escapes/);
+});
+
+test('split CRLF chunks are compared only after the newline arrives', async () => {
+    const program = `
+        process.stdout.write('scheduleflow> ');
+        process.stdin.once('data', () => {
+            process.stdout.write('Bye\\r');
+            setTimeout(() => { process.stdout.write('\\n'); process.exit(0); }, 80);
+        });
+    `;
+    await runScenario(scenario([{ input: 'exit', output: 'Bye', exitCode: 0 }]),
+        process.execPath, ['-e', program], () => {});
+});
+
+test('prompt-only response needs no invented newline', async () => {
+    const program = `
+        const readline = require('node:readline');
+        const rl = readline.createInterface({ input: process.stdin });
+        process.stdout.write('scheduleflow> ');
+        rl.on('line', line => {
+            if (!line) process.stdout.write('scheduleflow> ');
+            else { console.log('Bye'); process.exit(0); }
+        });
+    `;
+    await runScenario(scenario([{ input: '', output: '', newline: false },
+        { input: 'exit', output: 'Bye', exitCode: 0 }]), process.execPath, ['-e', program], () => {});
+});
+
+test('stderr and unexpected exit fail the current command', async () => {
+    for (const program of [
+        "process.stdout.write('scheduleflow> '); process.stdin.once('data', () => { console.error('oops'); });",
+        "process.stdout.write('scheduleflow> '); process.stdin.once('data', () => process.exit(3));"
+    ]) {
+        await assert.rejects(runScenario(scenario([{ input: 'exit', output: 'Bye', exitCode: 0 }]),
+            process.execPath, ['-e', program], () => {}), /FAILED RUNNER-TEST session 1 command 1/);
+    }
 });
