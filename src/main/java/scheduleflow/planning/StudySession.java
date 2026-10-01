@@ -1,0 +1,35 @@
+package scheduleflow.planning;
+
+import java.time.Duration;
+import java.time.LocalDateTime;
+import scheduleflow.common.ValidationException;
+
+/**
+ * Represents a positive aligned task interval inside one day's study window.
+ */
+public record StudySession(int taskId, LocalDateTime start, LocalDateTime end) {
+    /**
+     * Validates this interval; the planner checks its relationship to source tasks and other intervals.
+     */
+    public StudySession {
+        if (taskId <= 0 || start == null || end == null) {
+            throw new ValidationException("Session requires a positive task ID and nonnull endpoints.");
+        }
+        if (!start.toLocalDate().equals(end.toLocalDate()) || !start.isBefore(end)
+                || start.toLocalTime().isBefore(TimeRules.STUDY_START)
+                || end.toLocalTime().isAfter(TimeRules.STUDY_END) || !isAligned(start) || !isAligned(end)) {
+            throw new ValidationException("Session must use aligned endpoints inside one study window.");
+        }
+    }
+
+    /**
+     * Returns the exact wall-clock minutes in this interval.
+     */
+    public int minutes() {
+        return Math.toIntExact(Duration.between(start, end).toMinutes());
+    }
+
+    private static boolean isAligned(LocalDateTime time) {
+        return time.getMinute() % TimeRules.SLOT_MINUTES == 0 && time.getSecond() == 0 && time.getNano() == 0;
+    }
+}

@@ -33,3 +33,36 @@ Ensure that Java 25 is used when running the application or build tasks. On macO
 Use lightweight tags unless the user requests an annotated tag.
 When proposing or creating a commit message, include enough detail to explain the rationale for the change.
 Do not commit or push unless explicitly asked.
+
+# ScheduleFlow persistent project workflow
+
+The ScheduleFlow starter task explicitly authorizes local commits. For future
+project code tasks, make local commits after significant verified changes as
+part of this repository workflow; never push unless explicitly requested.
+
+Read `docs/ScheduleFlow-Implementation-Contract.docx` (or its full text companion)
+before changing shared contracts. Preserve public signatures and ownership;
+read sections 1-3, your role, and 14-16 before feature implementation.
+
+Repository skills are discoverable under `.agents/skills/` in Codex. Load the
+files explicitly if they are absent from the initial skill catalog:
+
+- For every Java change, including tests, load and follow
+  `.agents/skills/seedu-java-coding-standard/SKILL.md`.
+- Before every commit, load and follow
+  `.agents/skills/seedu-git-standard/SKILL.md`.
+- Review every code change against
+  `.agents/skills/seedu-java-coding-standard/references/code-quality.md` and its
+  attributed CS2113 guidelines.
+- After every coherent code update, review `test/ui-test-plan.md`, update
+  affected cases/fixtures as needed, and invoke
+  `.agents/skills/test-ui/SKILL.md`. Use this ScheduleFlow skill even if a global
+  skill with the same name is listed for a different project.
+- Run the applicable Java 25 tests/build/quality checks before committing.
+  An intended scaffold may proceed with a recorded BLOCKED UI status; an
+  actual active UI failure must be fixed and rerun in a new session first.
+
+Preserve existing unrelated work. Keep separate quality improvements in
+separate commits with tests and a problem/impact/change/rationale body.
+Do not implement another owner's deferred features as a refactoring. No fake
+success returns from stubs. Constructors must not perform I/O.
