@@ -12,6 +12,7 @@ public final class Main {
      * This feature is intentionally unfinished in the shared starter.
      */
     public static void main(String[] args) {
+//        System.out.println("Hello");
         throw new UnsupportedOperationException("TODO(Printing): implement Main.main");
     }
 }
